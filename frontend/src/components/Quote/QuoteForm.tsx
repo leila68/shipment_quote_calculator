@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Loader2 } from "lucide-react";
+import API_BASE_URL from "@/config/api";
 
 interface QuoteFormData {
   originCity: string;
@@ -50,7 +51,7 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
 
   const fetchLanes = async () => {
     try {
-      const response = await fetch("/api/quotes/meta/lanes");
+      const response = await fetch(`${API_BASE_URL}/quotes/meta/lanes`);
       if (!response.ok) {
         throw new Error("Failed to fetch lanes");
       }
@@ -100,7 +101,7 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
     setSubmitting(true);
 
     try {
-      const response = await fetch("/api/quotes", {
+      const response = await fetch(`${API_BASE_URL}/quotes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

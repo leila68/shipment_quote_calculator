@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import API_BASE_URL from "@/config/api";
 
 interface Quote {
   id: number;
@@ -37,7 +38,7 @@ const QuoteHistoryTable = () => {
   const fetchQuotes = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/quotes?page=${page}&limit=10`);
+      const response = await fetch(`${API_BASE_URL}/quotes?page=${page}&limit=10`);
       if (!response.ok) {
         throw new Error("Failed to fetch quotes");
       }
