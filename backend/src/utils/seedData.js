@@ -7,15 +7,20 @@ const seedData = () => {
   const db = getDatabase();
 
   try {
-    // Check if already seeded
+    // Check if already seeded - DON'T delete existing data!
     const laneCount = db.prepare('SELECT COUNT(*) as count FROM lanes').get();
-    if (laneCount.count > 0) {
-      console.log(`✅ Database already seeded (${laneCount.count} lanes found), skipping...`);
-      return;
+    const equipmentCount = db.prepare('SELECT COUNT(*) as count FROM equipment_types').get();
+    
+    if (laneCount.count > 0 && equipmentCount.count > 0) {
+      console.log(`✅ Database already seeded (${laneCount.count} lanes, ${equipmentCount.count} equipment types found)`);
+      console.log('   Skipping seed to preserve existing data...');
+      return; // EXIT WITHOUT DELETING ANYTHING
     }
 
     console.log('📝 Seeding fresh database...');
 
+    // Only seed if database is empty (no DELETE statements!)
+    
     // Insert lanes
     const laneStmt = db.prepare(`
       INSERT INTO lanes (origin_city, origin_province, origin_postal, destination_city, destination_province, destination_postal, base_rate, distance_km, transit_days)
@@ -50,7 +55,7 @@ const seedData = () => {
 
     const equipmentTypes = [
       ['dry_van', 1.0],
-      ['reefer', 1.25],
+      ['reefer', 1.3],
       ['flatbed', 1.15],
     ];
 
