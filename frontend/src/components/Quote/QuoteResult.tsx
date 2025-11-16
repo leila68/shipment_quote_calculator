@@ -1,11 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, TrendingUp, Weight, Truck } from "lucide-react";
+import { DollarSign, TrendingUp, Weight, Truck, Fuel } from "lucide-react";
 
 interface QuoteBreakdown {
   baseRate: number;
   equipmentMultiplier: number;
   weightFactor: number;
+  fuelSurcharge: number;
   total: number;
   lane: string;
   equipmentType: string;
@@ -33,53 +34,48 @@ const QuoteResult = ({ breakdown }: QuoteResultProps) => {
       <CardHeader className="bg-primary/5">
         <CardTitle className="flex items-center gap-2 text-2xl">
           <DollarSign className="h-6 w-6 text-primary" />
-          Quote Breakdown
+          Total Quote: {formatCurrency(breakdown.total)}
         </CardTitle>
         <CardDescription>
-          {breakdown.lane} • {breakdown.equipmentType} • {breakdown.weight.toLocaleString()} lbs
+          Lane: {breakdown.lane} | Equipment: {breakdown.equipmentType}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 pt-6">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="h-4 w-4" />
-              <span>Base Rate</span>
-            </div>
-            <span className="font-medium">{formatCurrency(breakdown.baseRate)}</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Truck className="h-4 w-4" />
-              <span>Equipment Multiplier</span>
-            </div>
-            <span className="font-medium">{formatCurrency(breakdown.equipmentMultiplier)}</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Weight className="h-4 w-4" />
-              <span>Weight Factor</span>
-            </div>
-            <span className="font-medium">{formatCurrency(breakdown.weightFactor)}</span>
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-lg font-semibold">Total Estimated Cost</span>
-          <span className="text-2xl font-bold text-primary">
-            {formatCurrency(breakdown.total)}
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-muted-foreground" />
+            Base Rate:
           </span>
+          <span>{formatCurrency(breakdown.baseRate)}</span>
         </div>
-
-        <div className="rounded-lg bg-accent/10 p-3 text-sm text-muted-foreground">
-          <p>
-            * This is an estimated quote. Final pricing may vary based on actual pickup conditions,
-            fuel surcharges, and additional services requested.
-          </p>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Truck className="h-5 w-5 text-muted-foreground" />
+            Equipment Multiplier:
+          </span>
+          <span>{breakdown.equipmentMultiplier}</span>
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Weight className="h-5 w-5 text-muted-foreground" />
+            Weight Surcharge:
+          </span>
+          <span>{formatCurrency(breakdown.weightFactor)}</span>
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Fuel className="h-5 w-5 text-muted-foreground" />
+            Fuel Surcharge:
+          </span>
+          <span>{formatCurrency(breakdown.fuelSurcharge)}</span>
+        </div>
+        <Separator />
+        <div className="flex items-center justify-between font-bold">
+          <span>Total:</span>
+          <span>{formatCurrency(breakdown.total)}</span>
         </div>
       </CardContent>
     </Card>

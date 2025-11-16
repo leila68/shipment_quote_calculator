@@ -19,6 +19,7 @@ interface QuoteBreakdown {
   lane: string;
   equipmentType: string;
   weight: number;
+  fuelSurcharge: number;
   status?: string;
   quoteId?: number;
 }
@@ -36,6 +37,7 @@ const QuoteFormPage = () => {
         baseRate: data.calculation.baseRate,
         equipmentMultiplier: data.calculation.equipmentMultiplier,
         weightFactor: data.calculation.weightSurcharge,
+        fuelSurcharge: data.calculation.fuelSurcharge, 
         total: data.calculation.totalQuote,
         lane: `${data.quote.origin_city} → ${data.quote.destination_city}`,
         equipmentType: data.quote.equipment_type,
