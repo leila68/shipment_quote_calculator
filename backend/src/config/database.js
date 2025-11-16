@@ -57,6 +57,7 @@ export const initializeDatabase = () => {
           base_rate REAL NOT NULL,
           equipment_multiplier REAL NOT NULL,
           weight_surcharge REAL NOT NULL,
+          fuel_surcharge REAL,
           total_quote REAL NOT NULL,
           status TEXT DEFAULT 'created' CHECK(status IN ('created', 'sent', 'accepted')),
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,

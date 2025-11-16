@@ -41,8 +41,8 @@ export const quoteModel = {
     const stmt = db.prepare(`
       INSERT INTO quotes (
         lane_id, equipment_type, total_weight, pickup_date,
-        base_rate, equipment_multiplier, weight_surcharge, total_quote, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        base_rate, equipment_multiplier, weight_surcharge, fuel_surcharge, total_quote, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
@@ -53,6 +53,7 @@ export const quoteModel = {
       quoteData.base_rate,
       quoteData.equipment_multiplier,
       quoteData.weight_surcharge,
+      quoteData.fuel_surcharge,
       quoteData.total_quote,
       quoteData.status || 'created'
     );

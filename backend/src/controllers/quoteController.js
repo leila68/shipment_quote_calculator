@@ -49,11 +49,12 @@ export const quoteController = {
 
       console.log('🧮 Calculating rate...');
       
-      // Calculate rate
+      // Calculate rate with distance for fuel surcharge
       const calculation = calculateRate(
         lane.base_rate,
         equipment.multiplier,
-        totalWeight
+        totalWeight,
+        lane.distance_km
       );
       console.log('💰 Calculation result:', calculation);
 
@@ -66,6 +67,7 @@ export const quoteController = {
         base_rate: calculation.baseRate,
         equipment_multiplier: calculation.equipmentMultiplier,
         weight_surcharge: calculation.weightSurcharge,
+        fuel_surcharge: calculation.fuelSurcharge,
         total_quote: calculation.totalQuote
       };
       
