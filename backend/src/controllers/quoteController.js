@@ -3,63 +3,90 @@ import { calculateRate } from '../utils/rateCalculator.js';
 
 export const quoteController = {
   // Calculate and create quote
-  async createQuote(req, res) {
-    try {
-      const { originCity, destinationCity, equipmentType, totalWeight, pickupDate } = req.body;
+async createQuote(req, res) {
+  try {
+    console.log('📝 Received quote request:', req.body);
+    
+    const { originCity, destinationCity, equipmentType, totalWeight, pickupDate } = req.body;
 
-      // Validation
-      if (!originCity || !destinationCity || !equipmentType || !totalWeight || !pickupDate) {
-        return res.status(400).json({ 
-          error: 'Missing required fields',
-          required: ['originCity', 'destinationCity', 'equipmentType', 'totalWeight', 'pickupDate']
-        });
-      }
-
-      // Get lane
-      const lane = quoteModel.getLaneByRoute(originCity, destinationCity);
-      if (!lane) {
-        return res.status(404).json({ 
-          error: 'Lane not found',
-          message: `No route found from ${originCity} to ${destinationCity}`
-        });
-      }
-
-      // Get equipment multiplier
-      const equipment = quoteModel.getEquipmentMultiplier(equipmentType);
-      if (!equipment) {
-        return res.status(404).json({ 
-          error: 'Equipment type not found',
-          message: `Invalid equipment type: ${equipmentType}`
-        });
-      }
-
-      // Calculate rate
-      const calculation = calculateRate(
-        lane.base_rate,
-        equipment.multiplier,
-        totalWeight
-      );
-
-      // Create quote
-      const quoteData = {
-        lane_id: lane.id,
-        equipment_type: equipmentType,
-        total_weight: totalWeight,
-        pickup_date: pickupDate,
-        ...calculation
-      };
-
-      const quote = quoteModel.createQuote(quoteData);
-
-      res.status(201).json({
-        success: true,
-        quote
+    // Validation
+    if (!originCity || !destinationCity || !equipmentType || !totalWeight || !pickupDate) {
+      console.log('❌ Missing required fields');
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        required: ['originCity', 'destinationCity', 'equipmentType', 'totalWeight', 'pickupDate'],
+        received: req.body
       });
-    } catch (error) {
-      console.error('Error creating quote:', error);
-      res.status(500).json({ error: 'Failed to create quote' });
     }
-  },
+
+    console.log('🔍 Looking for lane:', originCity, '->', destinationCity);
+    
+    // Get lane
+    const lane = quoteModel.getLaneByRoute(originCity, destinationCity);
+    console.log('📍 Lane found:', lane);
+    
+    if (!lane) {
+      console.log('❌ Lane not found');
+      return res.status(404).json({ 
+        error: 'Lane not found',
+        message: `No route found from ${originCity} to ${destinationCity}`
+      });
+    }
+
+    console.log('🚛 Looking for equipment type:', equipmentType);
+    
+    // Get equipment multiplier
+    const equipment = quoteModel.getEquipmentMultiplier(equipmentType);
+    console.log('🔧 Equipment found:', equipment);
+    
+    if (!equipment) {
+      console.log('❌ Equipment type not found');
+      return res.status(404).json({ 
+        error: 'Equipment type not found',
+        message: `Invalid equipment type: ${equipmentType}`
+      });
+    }
+
+    console.log('🧮 Calculating rate...');
+    
+    // Calculate rate
+    const calculation = calculateRate(
+      lane.base_rate,
+      equipment.multiplier,
+      totalWeight
+    );
+    console.log('💰 Calculation result:', calculation);
+
+    // Create quote - FIX: Map camelCase to snake_case for database
+    const quoteData = {
+      lane_id: lane.id,
+      equipment_type: equipmentType,
+      total_weight: totalWeight,
+      pickup_date: pickupDate,
+      base_rate: calculation.baseRate,                    // ← Fixed
+      equipment_multiplier: calculation.equipmentMultiplier,  // ← Fixed
+      weight_surcharge: calculation.weightSurcharge,         // ← Fixed
+      total_quote: calculation.totalQuote                    // ← Fixed
+    };
+    
+    console.log('💾 Saving quote:', quoteData);
+
+    const quote = quoteModel.createQuote(quoteData);
+    console.log('✅ Quote created:', quote);
+
+    res.status(201).json({
+      success: true,
+      quote
+    });
+  } catch (error) {
+    console.error('❌ Error creating quote:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to create quote',
+      details: error.message 
+    });
+  }
+},
 
   // Get all quotes with filters
   async getQuotes(req, res) {
