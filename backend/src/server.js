@@ -11,8 +11,17 @@ const PORT = process.env.PORT || 5000;
 // Initialize database BEFORE importing routes
 initializeDatabase();
 
-// Middleware
-app.use(cors());
+// Middleware - CORS Configuration
+app.use(cors({
+  origin: [
+    'http://localhost:5173',  // Local development
+    'https://shipment-quote-calculator-ui.onrender.com',  // Production frontend
+    /\.onrender\.com$/  // Allow all *.onrender.com domains
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Health check
