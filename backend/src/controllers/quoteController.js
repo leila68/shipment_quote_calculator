@@ -3,98 +3,99 @@ import { calculateRate } from '../utils/rateCalculator.js';
 
 export const quoteController = {
   // Calculate and create quote
-async createQuote(req, res) {
-  try {
-    console.log('📝 Received quote request:', req.body);
-    
-    const { originCity, destinationCity, equipmentType, totalWeight, pickupDate } = req.body;
+  async createQuote(req, res) {
+    try {
+      console.log('📝 Received quote request:', req.body);
+      
+      const { originCity, destinationCity, equipmentType, totalWeight, pickupDate } = req.body;
 
-    // Validation
-    if (!originCity || !destinationCity || !equipmentType || !totalWeight || !pickupDate) {
-      console.log('❌ Missing required fields');
-      return res.status(400).json({ 
-        error: 'Missing required fields',
-        required: ['originCity', 'destinationCity', 'equipmentType', 'totalWeight', 'pickupDate'],
-        received: req.body
+      // Validation
+      if (!originCity || !destinationCity || !equipmentType || !totalWeight || !pickupDate) {
+        console.log('❌ Missing required fields');
+        return res.status(400).json({ 
+          error: 'Missing required fields',
+          required: ['originCity', 'destinationCity', 'equipmentType', 'totalWeight', 'pickupDate'],
+          received: req.body
+        });
+      }
+
+      console.log('🔍 Looking for lane:', originCity, '->', destinationCity);
+      
+      // Get lane
+      const lane = quoteModel.getLaneByRoute(originCity, destinationCity);
+      console.log('📍 Lane found:', lane);
+      
+      if (!lane) {
+        console.log('❌ Lane not found');
+        return res.status(404).json({ 
+          error: 'Lane not found',
+          message: `No route found from ${originCity} to ${destinationCity}`
+        });
+      }
+
+      console.log('🚛 Looking for equipment type:', equipmentType);
+      
+      // Get equipment multiplier
+      const equipment = quoteModel.getEquipmentMultiplier(equipmentType);
+      console.log('🔧 Equipment found:', equipment);
+      
+      if (!equipment) {
+        console.log('❌ Equipment type not found');
+        return res.status(404).json({ 
+          error: 'Equipment type not found',
+          message: `Invalid equipment type: ${equipmentType}`
+        });
+      }
+
+      console.log('🧮 Calculating rate...');
+      
+      // Calculate rate
+      const calculation = calculateRate(
+        lane.base_rate,
+        equipment.multiplier,
+        totalWeight
+      );
+      console.log('💰 Calculation result:', calculation);
+
+      // Create quote - Map camelCase to snake_case for database
+      const quoteData = {
+        lane_id: lane.id,
+        equipment_type: equipmentType,
+        total_weight: totalWeight,
+        pickup_date: pickupDate,
+        base_rate: calculation.baseRate,
+        equipment_multiplier: calculation.equipmentMultiplier,
+        weight_surcharge: calculation.weightSurcharge,
+        total_quote: calculation.totalQuote
+      };
+      
+      console.log('💾 Saving quote:', quoteData);
+
+      const quote = quoteModel.createQuote(quoteData);
+      console.log('✅ Quote created:', quote);
+
+      res.json({
+        success: true,
+        quote,
+        calculation
+      });
+    } catch (error) {
+      console.error('❌ Error creating quote:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({ 
+        error: 'Internal server error'
       });
     }
-
-    console.log('🔍 Looking for lane:', originCity, '->', destinationCity);
-    
-    // Get lane
-    const lane = quoteModel.getLaneByRoute(originCity, destinationCity);
-    console.log('📍 Lane found:', lane);
-    
-    if (!lane) {
-      console.log('❌ Lane not found');
-      return res.status(404).json({ 
-        error: 'Lane not found',
-        message: `No route found from ${originCity} to ${destinationCity}`
-      });
-    }
-
-    console.log('🚛 Looking for equipment type:', equipmentType);
-    
-    // Get equipment multiplier
-    const equipment = quoteModel.getEquipmentMultiplier(equipmentType);
-    console.log('🔧 Equipment found:', equipment);
-    
-    if (!equipment) {
-      console.log('❌ Equipment type not found');
-      return res.status(404).json({ 
-        error: 'Equipment type not found',
-        message: `Invalid equipment type: ${equipmentType}`
-      });
-    }
-
-    console.log('🧮 Calculating rate...');
-    
-    // Calculate rate
-    const calculation = calculateRate(
-      lane.base_rate,
-      equipment.multiplier,
-      totalWeight
-    );
-    console.log('💰 Calculation result:', calculation);
-
-    // Create quote - FIX: Map camelCase to snake_case for database
-    const quoteData = {
-      lane_id: lane.id,
-      equipment_type: equipmentType,
-      total_weight: totalWeight,
-      pickup_date: pickupDate,
-      base_rate: calculation.baseRate,                    // ← Fixed
-      equipment_multiplier: calculation.equipmentMultiplier,  // ← Fixed
-      weight_surcharge: calculation.weightSurcharge,         // ← Fixed
-      total_quote: calculation.totalQuote                    // ← Fixed
-    };
-    
-    console.log('💾 Saving quote:', quoteData);
-
-    const quote = quoteModel.createQuote(quoteData);
-    console.log('✅ Quote created:', quote);
-
-    res.status(201).json({
-      success: true,
-      quote
-    });
-  } catch (error) {
-    console.error('❌ Error creating quote:', error);
-    console.error('Stack trace:', error.stack);
-    res.status(500).json({ 
-      error: 'Failed to create quote',
-      details: error.message 
-    });
-  }
-},
+  },
 
   // Get all quotes with filters
   async getQuotes(req, res) {
     try {
-      const { equipmentType, startDate, endDate, page = 1, limit = 50 } = req.query;
+      const { equipmentType, status, startDate, endDate, page = 1, limit = 50 } = req.query;
 
       const filters = {
         equipmentType,
+        status,
         startDate,
         endDate,
         limit: parseInt(limit),
@@ -117,6 +118,38 @@ async createQuote(req, res) {
     } catch (error) {
       console.error('Error fetching quotes:', error);
       res.status(500).json({ error: 'Failed to fetch quotes' });
+    }
+  },
+
+  // Update quote status
+  async updateQuoteStatus(req, res) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        return res.status(400).json({ 
+          error: 'Status is required',
+          validStatuses: ['created', 'sent', 'accepted']
+        });
+      }
+
+      const quote = quoteModel.updateQuoteStatus(id, status);
+
+      res.json({
+        success: true,
+        quote,
+        message: `Quote status updated to '${status}'`
+      });
+    } catch (error) {
+      console.error('Error updating quote status:', error);
+      if (error.message.includes('Invalid status')) {
+        return res.status(400).json({ error: error.message });
+      }
+      if (error.message === 'Quote not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Failed to update quote status' });
     }
   },
 

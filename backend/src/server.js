@@ -1,29 +1,49 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import quoteRoutes from './routes/quoteRoutes.js';
-import { initializeDatabase } from './config/database.js';
+import { initializeDatabase, closeDatabase } from './config/database.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Initialize database BEFORE importing routes
+initializeDatabase();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Initialize database
-initializeDatabase();
-
-// Routes
-app.use('/api/quotes', quoteRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+// Dynamically import routes after database initialization
+const startServer = async () => {
+  const { default: quoteRoutes } = await import('./routes/quoteRoutes.js');
+  app.use('/api/quotes', quoteRoutes);
+
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+
+  // Graceful shutdown
+  const gracefulShutdown = () => {
+    console.log('\n🛑 Shutting down gracefully...');
+    server.close(() => {
+      closeDatabase();
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
+};
+
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  closeDatabase();
+  process.exit(1);
 });
