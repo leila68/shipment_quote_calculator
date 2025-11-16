@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "node src/server.js",
-    "seed": "node src/scripts/seedDatabase.js",
-    "start": "node src/server.js",
+    "seed": "node src/utils/seedData.js",
+    "start": "node src/utils/seedData.js && node src/server.js",
     "postinstall": "node src/utils/seedData.js"
   },
   "dependencies": {
