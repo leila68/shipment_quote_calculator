@@ -21,7 +21,7 @@ interface QuoteFormData {
 }
 
 interface QuoteFormProps {
-  onSubmit: (data: QuoteFormData) => void;
+  onSubmit: (data: any) => void;
 }
 
 const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
@@ -33,11 +33,30 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
     pickupDate: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add form validation
-    // TODO: Call backend API endpoint for quote calculation
-    onSubmit(formData);
+
+    try {
+      const response = await fetch("/api/quotes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to calculate quote");
+      }
+
+      const result = await response.json();
+      console.log("Quote result:", result);
+
+      onSubmit(result);
+    } catch (error) {
+      console.error("Error calculating quote:", error);
+      alert("An error occurred while calculating the quote. Please try again.");
+    }
   };
 
   const handleInputChange = (field: keyof QuoteFormData, value: string) => {
@@ -90,7 +109,7 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
                   <SelectValue placeholder="Select equipment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dry-van">Dry Van</SelectItem>
+                  <SelectItem value="dry_van">Dry Van</SelectItem>
                   <SelectItem value="reefer">Reefer (Refrigerated)</SelectItem>
                   <SelectItem value="flatbed">Flatbed</SelectItem>
                 </SelectContent>

@@ -19,56 +19,36 @@ interface QuoteBreakdown {
   lane: string;
   equipmentType: string;
   weight: number;
+  status?: string;
+  quoteId?: number;
 }
 
 const QuoteFormPage = () => {
   const [quoteResult, setQuoteResult] = useState<QuoteBreakdown | null>(null);
   const { toast } = useToast();
 
-  const handleQuoteSubmit = async (data: QuoteFormData) => {
-    // TODO: Replace this mock calculation with actual backend API call
-    // Example API endpoint: POST /api/quotes/calculate
-    // Expected response: { baseRate, equipmentMultiplier, weightFactor, total }
-
-    try {
-      // Mock calculation logic (replace with API call)
-      const weight = parseInt(data.totalWeight);
-      const baseRate = 1500;
-      
-      // Equipment type multipliers
-      const equipmentMultipliers = {
-        "dry-van": 1.0,
-        "reefer": 1.3,
-        "flatbed": 1.2,
-      };
-      
-      const equipmentMultiplier =
-        baseRate * (equipmentMultipliers[data.equipmentType as keyof typeof equipmentMultipliers] - 1);
-      
-      const weightFactor = (weight / 1000) * 50;
-      const total = baseRate + equipmentMultiplier + weightFactor;
-
+  const handleQuoteSubmit = (data: any) => {
+    console.log('✅ Quote result received:', data);
+    
+    // Transform the API response to match QuoteBreakdown interface
+    if (data.success && data.quote && data.calculation) {
       const breakdown: QuoteBreakdown = {
-        baseRate,
-        equipmentMultiplier,
-        weightFactor,
-        total,
-        lane: `${data.originCity} → ${data.destinationCity}`,
-        equipmentType: data.equipmentType.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-        weight,
+        baseRate: data.calculation.baseRate,
+        equipmentMultiplier: data.calculation.equipmentMultiplier,
+        weightFactor: data.calculation.weightSurcharge,
+        total: data.calculation.totalQuote,
+        lane: `${data.quote.origin_city} → ${data.quote.destination_city}`,
+        equipmentType: data.quote.equipment_type,
+        weight: data.quote.total_weight,
+        status: data.quote.status,
+        quoteId: data.quote.id,
       };
-
+      
       setQuoteResult(breakdown);
-
+      
       toast({
         title: "Quote calculated successfully!",
-        description: `Total estimated cost: $${total.toFixed(2)}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error calculating quote",
-        description: "Please try again later.",
-        variant: "destructive",
+        description: `Total: $${data.calculation.totalQuote.toFixed(2)} • Status: ${data.quote.status}`,
       });
     }
   };
