@@ -11,6 +11,9 @@ interface QuoteBreakdown {
   lane: string;
   equipmentType: string;
   weight: number;
+  liftgate: boolean;
+  appointment: boolean;
+  residential: boolean;
 }
 
 interface QuoteResultProps {
@@ -71,6 +74,28 @@ const QuoteResult = ({ breakdown }: QuoteResultProps) => {
             Fuel Surcharge:
           </span>
           <span>{formatCurrency(breakdown.fuelSurcharge)}</span>
+        </div>
+        <Separator />
+        <div className="space-y-2">
+          <h4 className="font-bold">Accessories:</h4>
+          {breakdown.liftgate && (
+            <div className="flex items-center justify-between">
+              <span>Liftgate Service:</span>
+              <span>{formatCurrency(15)}</span>
+            </div>
+          )}
+          {breakdown.appointment && (
+            <div className="flex items-center justify-between">
+              <span>Scheduled Delivery:</span>
+              <span>{formatCurrency(20)}</span>
+            </div>
+          )}
+          {breakdown.residential && (
+            <div className="flex items-center justify-between">
+              <span>Residential Delivery:</span>
+              <span>{formatCurrency(25)}</span>
+            </div>
+          )}
         </div>
         <Separator />
         <div className="flex items-center justify-between font-bold">

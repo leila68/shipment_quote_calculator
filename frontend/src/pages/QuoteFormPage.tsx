@@ -9,6 +9,11 @@ interface QuoteFormData {
   equipmentType: string;
   totalWeight: string;
   pickupDate: string;
+  accessorials: {
+    liftgate: boolean;
+    appointment: boolean;
+    residential: boolean;
+  };
 }
 
 interface QuoteBreakdown {
@@ -20,6 +25,9 @@ interface QuoteBreakdown {
   equipmentType: string;
   weight: number;
   fuelSurcharge: number;
+  liftgate: boolean;
+  appointment: boolean;
+  residential: boolean;
   status?: string;
   quoteId?: number;
 }
@@ -42,6 +50,9 @@ const QuoteFormPage = () => {
         lane: `${data.quote.origin_city} → ${data.quote.destination_city}`,
         equipmentType: data.quote.equipment_type,
         weight: data.quote.total_weight,
+        liftgate: data.quote.liftgate_service,
+        appointment: data.quote.appointment_delivery,
+        residential: data.quote.residential_delivery,
         status: data.quote.status,
         quoteId: data.quote.id,
       };

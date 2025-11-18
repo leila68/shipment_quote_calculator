@@ -19,6 +19,11 @@ interface QuoteFormData {
   equipmentType: string;
   totalWeight: string;
   pickupDate: string;
+  accessorials: {
+    liftgate: boolean;
+    appointment: boolean;
+    residential: boolean;
+  };
 }
 
 interface QuoteFormProps {
@@ -40,6 +45,11 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
     equipmentType: "",
     totalWeight: "",
     pickupDate: "",
+    accessorials: {
+      liftgate: false,
+      appointment: false,
+      residential: false,
+    },
   });
   const [lanes, setLanes] = useState<Lane[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +143,16 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
       }
       return { ...prev, [field]: value };
     });
+  };
+
+  const handleAccessoryChange = (accessory: keyof QuoteFormData["accessorials"], checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      accessorials: {
+        ...prev.accessorials,
+        [accessory]: checked,
+      },
+    }));
   };
 
   const originCities = getUniqueCities("origin");
@@ -246,6 +266,36 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
                   min={new Date().toISOString().split("T")[0]}
                 />
                 <Calendar className="absolute right-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-bold">Accessories</h4>
+              <div className="flex flex-col gap-2">
+                <Label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.accessorials.liftgate}
+                    onChange={(e) => handleAccessoryChange("liftgate", e.target.checked)}
+                  />
+                  Liftgate Service ($15)
+                </Label>
+                <Label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.accessorials.appointment}
+                    onChange={(e) => handleAccessoryChange("appointment", e.target.checked)}
+                  />
+                  Scheduled Delivery ($20)
+                </Label>
+                <Label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.accessorials.residential}
+                    onChange={(e) => handleAccessoryChange("residential", e.target.checked)}
+                  />
+                  Residential Delivery ($25)
+                </Label>
               </div>
             </div>
 
