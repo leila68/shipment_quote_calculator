@@ -41,21 +41,26 @@ export const quoteModel = {
     const stmt = db.prepare(`
       INSERT INTO quotes (
         lane_id, equipment_type, total_weight, pickup_date,
-        base_rate, equipment_multiplier, weight_surcharge, fuel_surcharge, total_quote, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        base_rate, equipment_multiplier, weight_surcharge, fuel_surcharge, total_quote, status,
+        liftgate_service, appointment_delivery, residential_delivery, accessories_total
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const info = stmt.run(
       quoteData.lane_id,
       quoteData.equipment_type,
-      quoteData.total_weight,
+      parseFloat(quoteData.total_weight), // Ensure this is a number
       quoteData.pickup_date,
-      quoteData.base_rate,
-      quoteData.equipment_multiplier,
-      quoteData.weight_surcharge,
-      quoteData.fuel_surcharge,
-      quoteData.total_quote,
-      quoteData.status || 'created'
+      parseFloat(quoteData.base_rate), // Ensure this is a number
+      parseFloat(quoteData.equipment_multiplier), // Ensure this is a number
+      parseFloat(quoteData.weight_surcharge), // Ensure this is a number
+      parseFloat(quoteData.fuel_surcharge), // Ensure this is a number
+      parseFloat(quoteData.total_quote), // Ensure this is a number
+      quoteData.status || 'created',
+      quoteData.liftgate_service ? 1 : 0, // Convert boolean to integer (SQLite does not support booleans)
+      quoteData.appointment_delivery ? 1 : 0, // Convert boolean to integer
+      quoteData.residential_delivery ? 1 : 0, // Convert boolean to integer
+      parseFloat(quoteData.accessories_total) // Ensure this is a number
     );
 
     console.log('💾 Insert result:', info);

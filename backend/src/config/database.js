@@ -60,6 +60,10 @@ export const initializeDatabase = () => {
           fuel_surcharge REAL,
           total_quote REAL NOT NULL,
           status TEXT DEFAULT 'created' CHECK(status IN ('created', 'sent', 'accepted')),
+          liftgate_service BOOLEAN DEFAULT FALSE, -- New field
+          appointment_delivery BOOLEAN DEFAULT FALSE, -- New field
+          residential_delivery BOOLEAN DEFAULT FALSE, -- New field
+          accessories_total DECIMAL(10,2), -- New field
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (lane_id) REFERENCES lanes(id)
         );

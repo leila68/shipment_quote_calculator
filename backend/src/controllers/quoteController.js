@@ -7,7 +7,7 @@ export const quoteController = {
     try {
       console.log('📝 Received quote request:', req.body);
       
-      const { originCity, destinationCity, equipmentType, totalWeight, pickupDate } = req.body;
+      const { originCity, destinationCity, equipmentType, totalWeight, pickupDate, accessorials } = req.body;
 
       // Validation
       if (!originCity || !destinationCity || !equipmentType || !totalWeight || !pickupDate) {
@@ -54,7 +54,8 @@ export const quoteController = {
         lane.base_rate,
         equipment.multiplier,
         totalWeight,
-        lane.distance_km
+        lane.distance_km,
+        accessorials
       );
       console.log('💰 Calculation result:', calculation);
 
@@ -68,7 +69,11 @@ export const quoteController = {
         equipment_multiplier: calculation.equipmentMultiplier,
         weight_surcharge: calculation.weightSurcharge,
         fuel_surcharge: calculation.fuelSurcharge,
-        total_quote: calculation.totalQuote
+        total_quote: calculation.totalQuote,
+        liftgate_service: accessorials?.liftgate || false,
+        appointment_delivery: accessorials?.appointment || false,
+        residential_delivery: accessorials?.residential || false,
+        accessories_total: calculation.accessoriesTotal || 0.00
       };
       
       console.log('💾 Saving quote:', quoteData);
