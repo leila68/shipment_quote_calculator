@@ -49,7 +49,7 @@ npm run dev
 
 This will start:
 - Backend API: http://localhost:5000
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:8080
 
 ## Project Structure
 ```
@@ -65,22 +65,45 @@ shipment-quote-calculator/
 ├── frontend/         # React application
 │   └── src/
 │       ├── components/
-│       ├── pages/
-│       └── lib/      # API client
+│       │   ├── Quote/ # Components for quote-related functionality
+│       │   ├── ui/    # Reusable UI components (e.g., buttons, cards)
+│       ├── hooks/     # Custom React hooks
+│       ├── lib/       # API client and utility functions
+│       ├── pages/     # Page components for routing
+│       ├── styles/    # Global styles and Tailwind configuration
+│       └── App.tsx    # Main application entry point
 └── package.json      # Root scripts
 ```
 
 ## API Endpoints
 
-- `POST /api/quotes` - Create new quote
-- `GET /api/quotes` - Get all quotes (with filters)
-- `GET /api/quotes/:id` - Get single quote
-- `GET /api/quotes/meta/lanes` - Get available lanes
+- **`GET /api/quotes/meta/lanes`**  
+  Get available lanes (origin and destination cities).
+
+- **`POST /api/quotes/calculate`**  
+  Calculate a quote without saving it to the database.
+
+- **`POST /api/quotes`**  
+  Create a new quote and save it to the database.
+
+- **`GET /api/quotes`**  
+  Get all quotes with optional filters (e.g., by status, lane, etc.).
+
+- **`PATCH /api/quotes/:id/status`**  
+  Update the status of a specific quote (e.g., `created`, `sent`, `accepted`).
+
+- **`GET /api/quotes/:id`**  
+  Get details of a specific quote by its ID.
 
 ## Features
 
-- ✅ Real-time rate calculation
-- ✅ Quote history with filtering
-- ✅ Lane-based pricing
-- ✅ Equipment type multipliers
-- ✅ Weight-based surcharges
+- Real-time rate calculation
+- Lane-based pricing
+- Equipment type multipliers
+- Weight-based surcharges
+- Accessories (Liftgate Service, Scheduled Delivery, Residential Delivery)
+
+## Future Work
+- Quote History with Filtering: Adding the ability to filter by date, origin/destination, or equipment type
+- Quote Export: Enable exporting quotes as CSV or PDF.
+- Rate Insights: Display average rate per mile for a selected lane or equipment type.
