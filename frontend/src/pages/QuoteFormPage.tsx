@@ -2,6 +2,7 @@ import { useState } from "react";
 import QuoteForm from "@/components/Quote/QuoteForm";
 import QuoteResult from "@/components/Quote/QuoteResult";
 import { useToast } from "@/hooks/use-toast";
+import API_BASE_URL from "@/config/api";
 
 interface QuoteFormData {
   originCity: string;
@@ -28,41 +29,122 @@ interface QuoteBreakdown {
   liftgate: boolean;
   appointment: boolean;
   residential: boolean;
-  status?: string;
-  quoteId?: number;
 }
 
 const QuoteFormPage = () => {
   const [quoteResult, setQuoteResult] = useState<QuoteBreakdown | null>(null);
+  const [formData, setFormData] = useState<QuoteFormData | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
 
-  const handleQuoteSubmit = (data: any) => {
-    console.log('✅ Quote result received:', data);
+  const handleQuoteCalculate = (data: any) => {
+    console.log('✅ Raw data received:', data);
     
-    // Transform the API response to match QuoteBreakdown interface
-    if (data.success && data.quote && data.calculation) {
-      const breakdown: QuoteBreakdown = {
-        baseRate: data.calculation.baseRate,
-        equipmentMultiplier: data.calculation.equipmentMultiplier,
-        weightFactor: data.calculation.weightSurcharge,
-        fuelSurcharge: data.calculation.fuelSurcharge, 
-        total: data.calculation.totalQuote,
-        lane: `${data.quote.origin_city} → ${data.quote.destination_city}`,
-        equipmentType: data.quote.equipment_type,
-        weight: data.quote.total_weight,
-        liftgate: data.quote.liftgate_service,
-        appointment: data.quote.appointment_delivery,
-        residential: data.quote.residential_delivery,
-        status: data.quote.status,
-        quoteId: data.quote.id,
-      };
-      
-      setQuoteResult(breakdown);
-      
+    // Store the form data for later submission
+    setFormData(data.formData);
+    
+    // Extract calculation from nested response
+    // Backend returns: { calculation: { success: true, calculation: {...} }, formData: {...} }
+    const calcResponse = data.calculation;
+    console.log('Calculation response:', calcResponse);
+    
+    // Get the actual calculation object
+    const calc = calcResponse?.calculation || calcResponse;
+    console.log('Actual calculation:', calc);
+    
+    const form = data.formData;
+    
+    if (!calc) {
+      console.error('No calculation data found');
       toast({
-        title: "Quote calculated successfully!",
-        description: `Total: $${data.calculation.totalQuote.toFixed(2)} • Status: ${data.quote.status}`,
+        title: "Error",
+        description: "Invalid response from server",
+        variant: "destructive",
       });
+      return;
+    }
+    
+    // Map backend field names to frontend
+    const breakdown: QuoteBreakdown = {
+      baseRate: Number(calc.baseRate) || 0,
+      equipmentMultiplier: Number(calc.equipmentMultiplier) || 1,
+      weightFactor: Number(calc.weightSurcharge) || 0,
+      fuelSurcharge: Number(calc.fuelSurcharge) || 0,
+      total: Number(calc.totalQuote) || 0,
+      lane: `${form.originCity} → ${form.destinationCity}`,
+      equipmentType: form.equipmentType,
+      weight: parseInt(form.totalWeight) || 0,
+      liftgate: form.accessorials?.liftgate || false,
+      appointment: form.accessorials?.appointment || false,
+      residential: form.accessorials?.residential || false,
+    };
+    
+    console.log('Final breakdown:', breakdown);
+    
+    // Validate that we have actual numbers
+    if (breakdown.total === 0 && breakdown.baseRate === 0) {
+      console.error('Calculation returned zeros');
+      toast({
+        title: "Error",
+        description: "Calculation failed - all values are zero",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setQuoteResult(breakdown);
+    setIsSubmitted(false);
+    
+    toast({
+      title: "Quote calculated!",
+      description: `Total: $${breakdown.total.toFixed(2)}`,
+    });
+  };
+
+  const handleQuoteSubmit = async () => {
+    if (!formData || !quoteResult) {
+      toast({
+        title: "Error",
+        description: "No quote data to submit",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/quotes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit quote");
+      }
+
+      const result = await response.json();
+      console.log("Quote submitted:", result);
+
+      setIsSubmitted(true);
+
+      toast({
+        title: "Quote submitted successfully!",
+        description: `Quote #${result.quote?.id || 'N/A'} has been saved`,
+      });
+    } catch (error) {
+      console.error("Error submitting quote:", error);
+      toast({
+        title: "Submission failed",
+        description: "An error occurred while submitting the quote. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -71,13 +153,20 @@ const QuoteFormPage = () => {
       <div>
         <h1 className="text-4xl font-bold tracking-tight">New Shipment Quote</h1>
         <p className="mt-2 text-muted-foreground">
-          Get an instant quote for your freight shipment
+          Calculate your freight quote, review the details, and submit when ready
         </p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <QuoteForm onSubmit={handleQuoteSubmit} />
-        {quoteResult && <QuoteResult breakdown={quoteResult} />}
+        <QuoteForm onCalculate={handleQuoteCalculate} />
+        {quoteResult && (
+          <QuoteResult 
+            breakdown={quoteResult} 
+            onSubmit={handleQuoteSubmit}
+            isSubmitting={isSubmitting}
+            isSubmitted={isSubmitted}
+          />
+        )}
       </div>
     </div>
   );
