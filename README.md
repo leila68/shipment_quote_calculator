@@ -15,7 +15,13 @@ A freight broker shipment quoting tool with rate calculation and quote history.
 
 ## Setup Instructions
 
-### 1. Install dependencies
+### 1. Clone the Repository
+```bash
+git clone https://github.com/leila68/shipment_quote_calculator.git
+cd shipment-quote-calculator
+```
+
+### 2. Install dependencies
 ```bash
 # Install root dependencies
 npm install
@@ -31,18 +37,18 @@ npm install
 cd ..
 ```
 
-### 2. Set up environment variables
+### 3. Set up environment variables
 ```bash
 # Copy example env file in backend
 cp backend/.env.example backend/.env
 ```
 
-### 3. Seed the database
+### 4. Seed the database
 ```bash
 npm run seed
 ```
 
-### 4. Run the application
+### 5. Run the application
 ```bash
 npm run dev
 ```
