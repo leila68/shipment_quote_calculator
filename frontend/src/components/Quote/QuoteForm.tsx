@@ -27,7 +27,7 @@ interface QuoteFormData {
 }
 
 interface QuoteFormProps {
-  onSubmit: (data: any) => void;
+  onCalculate: (data: any) => void;
 }
 
 interface Lane {
@@ -38,7 +38,7 @@ interface Lane {
   destination_province: string;
 }
 
-const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
+const QuoteForm = ({ onCalculate }: QuoteFormProps) => {
   const [formData, setFormData] = useState<QuoteFormData>({
     originCity: "",
     destinationCity: "",
@@ -53,7 +53,7 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
   });
   const [lanes, setLanes] = useState<Lane[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [calculating, setCalculating] = useState(false);
 
   useEffect(() => {
     fetchLanes();
@@ -82,7 +82,6 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
       province: type === "origin" ? lane.origin_province : lane.destination_province,
     }));
     
-    // Remove duplicates based on city name
     const uniqueCities = Array.from(
       new Map(cities.map(item => [item.city, item])).values()
     );
@@ -95,7 +94,6 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
       return getUniqueCities("destination");
     }
     
-    // Filter destinations based on selected origin
     const availableLanes = lanes.filter(
       (lane) => lane.origin_city === formData.originCity
     );
@@ -106,12 +104,13 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCalculate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
+    setCalculating(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes`, {
+      // Call a new endpoint that only calculates without saving
+      const response = await fetch(`${API_BASE_URL}/quotes/calculate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,20 +123,23 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
       }
 
       const result = await response.json();
-      console.log("Quote result:", result);
+      console.log("Quote calculation:", result);
 
-      onSubmit(result);
+      // Pass both the calculation result and the form data
+      onCalculate({
+        calculation: result,
+        formData: formData
+      });
     } catch (error) {
       console.error("Error calculating quote:", error);
       alert("An error occurred while calculating the quote. Please try again.");
     } finally {
-      setSubmitting(false);
+      setCalculating(false);
     }
   };
 
   const handleInputChange = (field: keyof QuoteFormData, value: string) => {
     setFormData((prev) => {
-      // Reset destination if origin changes
       if (field === "originCity") {
         return { ...prev, [field]: value, destinationCity: "" };
       }
@@ -163,7 +165,7 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
       <CardHeader>
         <CardTitle>Request a Shipment Quote</CardTitle>
         <CardDescription>
-          Fill in the details below to get an instant freight quote
+          Fill in the details below to calculate your freight quote
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -172,7 +174,7 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleCalculate} className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="originCity">Origin City</Label>
@@ -299,8 +301,8 @@ const QuoteForm = ({ onSubmit }: QuoteFormProps) => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={submitting}>
-              {submitting ? (
+            <Button type="submit" className="w-full" size="lg" disabled={calculating}>
+              {calculating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Calculating...
