@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, TrendingUp, Weight, Truck, Fuel } from "lucide-react";
+import { DollarSign, TrendingUp, Weight, Truck, Fuel, Loader2, CheckCircle2 } from "lucide-react";
 
 interface QuoteBreakdown {
   baseRate: number;
@@ -18,9 +20,12 @@ interface QuoteBreakdown {
 
 interface QuoteResultProps {
   breakdown: QuoteBreakdown | null;
+  onSubmit: () => void;
+  isSubmitting?: boolean;
+  isSubmitted?: boolean;
 }
 
-const QuoteResult = ({ breakdown }: QuoteResultProps) => {
+const QuoteResult = ({ breakdown, onSubmit, isSubmitting = false, isSubmitted = false }: QuoteResultProps) => {
   if (!breakdown) {
     return null;
   }
@@ -43,7 +48,7 @@ const QuoteResult = ({ breakdown }: QuoteResultProps) => {
           Lane: {breakdown.lane} | Equipment: {breakdown.equipmentType}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-muted-foreground" />
@@ -57,7 +62,7 @@ const QuoteResult = ({ breakdown }: QuoteResultProps) => {
             <Truck className="h-5 w-5 text-muted-foreground" />
             Equipment Multiplier:
           </span>
-          <span>{breakdown.equipmentMultiplier}</span>
+          <span>{breakdown.equipmentMultiplier}x</span>
         </div>
         <Separator />
         <div className="flex items-center justify-between">
@@ -75,32 +80,68 @@ const QuoteResult = ({ breakdown }: QuoteResultProps) => {
           </span>
           <span>{formatCurrency(breakdown.fuelSurcharge)}</span>
         </div>
-        <Separator />
-        <div className="space-y-2">
-          <h4 className="font-bold">Accessories:</h4>
-          {breakdown.liftgate && (
-            <div className="flex items-center justify-between">
-              <span>Liftgate Service:</span>
-              <span>{formatCurrency(15)}</span>
+        
+        {(breakdown.liftgate || breakdown.appointment || breakdown.residential) && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <h4 className="font-semibold">Accessories:</h4>
+              {breakdown.liftgate && (
+                <div className="flex items-center justify-between text-sm">
+                  <span>Liftgate Service:</span>
+                  <span>{formatCurrency(15)}</span>
+                </div>
+              )}
+              {breakdown.appointment && (
+                <div className="flex items-center justify-between text-sm">
+                  <span>Scheduled Delivery:</span>
+                  <span>{formatCurrency(20)}</span>
+                </div>
+              )}
+              {breakdown.residential && (
+                <div className="flex items-center justify-between text-sm">
+                  <span>Residential Delivery:</span>
+                  <span>{formatCurrency(25)}</span>
+                </div>
+              )}
             </div>
-          )}
-          {breakdown.appointment && (
-            <div className="flex items-center justify-between">
-              <span>Scheduled Delivery:</span>
-              <span>{formatCurrency(20)}</span>
-            </div>
-          )}
-          {breakdown.residential && (
-            <div className="flex items-center justify-between">
-              <span>Residential Delivery:</span>
-              <span>{formatCurrency(25)}</span>
-            </div>
-          )}
-        </div>
-        <Separator />
-        <div className="flex items-center justify-between font-bold">
+          </>
+        )}
+        
+        <Separator className="my-4" />
+        <div className="flex items-center justify-between text-lg font-bold">
           <span>Total:</span>
-          <span>{formatCurrency(breakdown.total)}</span>
+          <span className="text-primary">{formatCurrency(breakdown.total)}</span>
+        </div>
+
+        <div className="pt-4">
+          {isSubmitted ? (
+            <Button className="w-full" size="lg" disabled>
+              <CheckCircle2 className="mr-2 h-5 w-5" />
+              Quote Submitted Successfully
+            </Button>
+          ) : (
+            <Button 
+              className="w-full" 
+              size="lg" 
+              onClick={onSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting Quote...
+                </>
+              ) : (
+                "Submit Quote"
+              )}
+            </Button>
+          )}
+          {!isSubmitted && (
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              Review the details above and submit to save this quote
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
