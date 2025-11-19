@@ -2,7 +2,81 @@ import { quoteModel } from '../models/quoteModel.js';
 import { calculateRate } from '../utils/rateCalculator.js';
 
 export const quoteController = {
-  // Calculate and create quote
+  // Calculate quote WITHOUT saving to database
+  async calculateQuote(req, res) {
+    try {
+      console.log('🧮 Calculating quote (no save):', req.body);
+      
+      const { originCity, destinationCity, equipmentType, totalWeight, pickupDate, accessorials } = req.body;
+
+      // Validation
+      if (!originCity || !destinationCity || !equipmentType || !totalWeight || !pickupDate) {
+        console.log('❌ Missing required fields');
+        return res.status(400).json({ 
+          error: 'Missing required fields',
+          required: ['originCity', 'destinationCity', 'equipmentType', 'totalWeight', 'pickupDate'],
+          received: req.body
+        });
+      }
+
+      console.log('🔍 Looking for lane:', originCity, '->', destinationCity);
+      
+      // Get lane
+      const lane = quoteModel.getLaneByRoute(originCity, destinationCity);
+      console.log('📍 Lane found:', lane);
+      
+      if (!lane) {
+        console.log('❌ Lane not found');
+        return res.status(404).json({ 
+          error: 'Lane not found',
+          message: `No route found from ${originCity} to ${destinationCity}`
+        });
+      }
+
+      console.log('🚛 Looking for equipment type:', equipmentType);
+      
+      // Get equipment multiplier
+      const equipment = quoteModel.getEquipmentMultiplier(equipmentType);
+      console.log('🔧 Equipment found:', equipment);
+      
+      if (!equipment) {
+        console.log('❌ Equipment type not found');
+        return res.status(404).json({ 
+          error: 'Equipment type not found',
+          message: `Invalid equipment type: ${equipmentType}`
+        });
+      }
+
+      console.log('🧮 Calculating rate...');
+      
+      // Calculate rate with distance for fuel surcharge
+      const calculation = calculateRate(
+        lane.base_rate,
+        equipment.multiplier,
+        totalWeight,
+        lane.distance_km,
+        accessorials
+      );
+      console.log('💰 Calculation result:', calculation);
+
+      // Return ONLY the calculation, DO NOT save to database
+      res.json({
+        success: true,
+        calculation
+      });
+      
+      console.log('✅ Quote calculated (not saved)');
+      
+    } catch (error) {
+      console.error('❌ Error calculating quote:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({ 
+        error: 'Internal server error'
+      });
+    }
+  },
+
+  // Calculate and create quote (SAVES TO DATABASE)
   async createQuote(req, res) {
     try {
       console.log('📝 Received quote request:', req.body);

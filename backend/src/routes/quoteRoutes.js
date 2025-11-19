@@ -6,10 +6,10 @@ const router = express.Router();
 // GET /api/quotes/meta/lanes - Get available lanes (MUST come before /:id)
 router.get('/meta/lanes', quoteController.getLanes);
 
-// POST /api/quotes/calculate
-router.post("/calculate", quoteController.createQuote);
+// POST /api/quotes/calculate - Calculate WITHOUT saving
+router.post("/calculate", quoteController.calculateQuote); 
 
-// POST /api/quotes - Create new quote
+// POST /api/quotes - Create new quote (REMOVE THE DUPLICATE!)
 router.post('/', quoteController.createQuote);
 
 // GET /api/quotes - Get all quotes with filters
