@@ -69,7 +69,7 @@ const QuoteHistoryTable = () => {
       if (filters.origin) queryParams.append('originCity', filters.origin);
       if (filters.destination) queryParams.append('destinationCity', filters.destination);
       if (filters.equipment) queryParams.append('equipmentType', filters.equipment);
-      if (filters.date) queryParams.append('date', filters.date); // Send as 'date'
+      if (filters.date) queryParams.append('date', filters.date); 
 
       const response = await fetch(`${API_BASE_URL}/quotes?${queryParams.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch quotes");
@@ -158,8 +158,15 @@ const QuoteHistoryTable = () => {
     return <Badge variant={variants[status] || "default"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
   };
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  const formatDate = (dateString: string) => {
+    const [year, month, day] = dateString.split("-");
+    return new Date(Number(year), Number(month) - 1, Number(day))
+      .toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+  };  
 
   return (
     <Card>
