@@ -133,9 +133,19 @@ const QuoteHistoryTable = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ origin: "", destination: "", equipment: "", date: "" });
-    setPage(1);
-    fetchQuotes();
+    // Clear all filter fields
+    setFilters({ 
+      origin: "", 
+      destination: "", 
+      equipment: "", 
+      date: "" 
+    });
+    setPage(1); // Reset to first page
+    
+    // Fetch all quotes without filters after a small delay to ensure state is updated
+    setTimeout(() => {
+      fetchQuotes();
+    }, 100);
   };
 
   const getStatusBadge = (status: string) => {
@@ -215,12 +225,14 @@ const QuoteHistoryTable = () => {
           </div>
 
           <Button onClick={applyFilters}>Apply Filters</Button>
-          <Button variant="outline" onClick={() => setFilters({
-            origin: "",
-            destination: "",
-            equipment: "", // Add this line
-            date: "",
-          })}>Reset</Button>
+        
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetFilters}
+          >
+            Clear All Filters
+          </Button>
         </div>
 
         {/* LOADING STATE */}
