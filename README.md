@@ -108,8 +108,8 @@ shipment-quote-calculator/
 - Equipment type multipliers
 - Weight-based surcharges
 - Accessories (Liftgate Service, Scheduled Delivery, Residential Delivery)
+- Quote History with Filtering: Adding the ability to filter by date, origin/destination, or equipment type
 
 ## Future Work
-- Quote History with Filtering: Adding the ability to filter by date, origin/destination, or equipment type
 - Quote Export: Enable exporting quotes as CSV or PDF.
 - Rate Insights: Display average rate per mile for a selected lane or equipment type.
