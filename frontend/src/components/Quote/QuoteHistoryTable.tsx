@@ -26,8 +26,17 @@ interface Quote {
   transit_days: number;
 }
 
+interface Lane {
+  id: number;
+  origin_city: string;
+  destination_city: string;
+  origin_province: string;
+  destination_province: string;
+}
+
 const QuoteHistoryTable = () => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [lanes, setLanes] = useState<Lane[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -81,9 +90,38 @@ const QuoteHistoryTable = () => {
     }
   };
 
+  const fetchLanes = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/quotes/meta/lanes`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch lanes");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setLanes(data.lanes);
+      }
+    } catch (error) {
+      console.error("Error fetching lanes:", error);
+    }
+  };
+
+  const getUniqueOriginCities = () => {
+    const cities = lanes.map(lane => lane.origin_city);
+    return [...new Set(cities)].sort();
+  };
+
+  const getUniqueDestinationCities = () => {
+    const cities = lanes.map(lane => lane.destination_city);
+    return [...new Set(cities)].sort();
+  };
+
   useEffect(() => {
     fetchQuotes();
   }, [page]);
+
+  useEffect(() => {
+    fetchLanes();
+  }, []);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -124,11 +162,39 @@ const QuoteHistoryTable = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="space-y-2 flex flex-col">
             <Label htmlFor="origin-filter">Origin City</Label>
-            <Input placeholder="Origin city" value={filters.origin} onChange={(e) => handleFilterChange("origin", e.target.value)} />
+            <Select 
+              value={filters.origin} 
+              onValueChange={(value) => handleFilterChange("origin", value)}
+            >
+              <SelectTrigger id="origin-filter">
+                <SelectValue placeholder="Select origin city" />
+              </SelectTrigger>
+              <SelectContent>
+                {getUniqueOriginCities().map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2 flex flex-col">
             <Label htmlFor="destination-filter">Destination City</Label>
-            <Input placeholder="Destination city" value={filters.destination} onChange={(e) => handleFilterChange("destination", e.target.value)} />
+            <Select 
+              value={filters.destination} 
+              onValueChange={(value) => handleFilterChange("destination", value)}
+            >
+              <SelectTrigger id="destination-filter">
+                <SelectValue placeholder="Select destination city" />
+              </SelectTrigger>
+              <SelectContent>
+                {getUniqueDestinationCities().map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2 flex flex-col"> {/* Add flex flex-col */}
             <Label htmlFor="equipment-filter">Equipment</Label>
