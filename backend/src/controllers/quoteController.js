@@ -172,7 +172,7 @@ export const quoteController = {
   // Get all quotes with filters
   async getQuotes(req, res) {
     try {
-      const { originCity, destinationCity, equipmentType, status, startDate, endDate, page = 1, limit = 50 } = req.query;
+      const { originCity, destinationCity, equipmentType, status, date, page = 1, limit = 50 } = req.query;
 
      // normalize/filter case-insensitive
      let eqType = equipmentType;
@@ -185,8 +185,7 @@ export const quoteController = {
     destinationCity,
     equipmentType,
     status,
-    startDate,
-    endDate,
+    pickupDate: date, 
     limit: parseInt(limit),
     offset: (parseInt(page) - 1) * parseInt(limit)
   };

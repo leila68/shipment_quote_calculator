@@ -120,14 +120,9 @@ export const quoteModel = {
       params.push(filters.status);
     }
 
-    if (filters.startDate) {
-      query += ' AND q.pickup_date >= ?';
-      params.push(filters.startDate);
-    }
-
-    if (filters.endDate) {
-      query += ' AND q.pickup_date <= ?';
-      params.push(filters.endDate);
+    if (filters.pickupDate) {
+      query += ' AND DATE(q.pickup_date) = DATE(?)';
+      params.push(filters.pickupDate);
     }
 
     query += ' ORDER BY q.created_at DESC LIMIT ? OFFSET ?';
@@ -166,14 +161,9 @@ export const quoteModel = {
       params.push(filters.status);
     }
 
-    if (filters.startDate) {
-      query += ' AND q.pickup_date >= ?';
-      params.push(filters.startDate);
-    }
-
-    if (filters.endDate) {
-      query += ' AND q.pickup_date <= ?';
-      params.push(filters.endDate);
+    if (filters.pickupDate) {
+      query += ' AND DATE(q.pickup_date) = DATE(?)';
+      params.push(filters.pickupDate);
     }
 
     return db.prepare(query).get(...params).count;
