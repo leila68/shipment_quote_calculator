@@ -60,17 +60,18 @@ const QuoteHistoryTable = () => {
   const fetchQuotes = async () => {
     setLoading(true);
     try {
-      const query = new URLSearchParams({
+      const queryParams = new URLSearchParams({
         page: String(page),
         limit: "10",
-        originCity: filters.origin,
-        destinationCity: filters.destination,
-        equipmentType: filters.equipment,
-        startDate: filters.date,
-        endDate: filters.date, // backend treats same date as single date filter
       });
 
-      const response = await fetch(`${API_BASE_URL}/quotes?${query.toString()}`);
+      // Only add non-empty filters
+      if (filters.origin) queryParams.append('originCity', filters.origin);
+      if (filters.destination) queryParams.append('destinationCity', filters.destination);
+      if (filters.equipment) queryParams.append('equipmentType', filters.equipment);
+      if (filters.date) queryParams.append('date', filters.date); // Send as 'date'
+
+      const response = await fetch(`${API_BASE_URL}/quotes?${queryParams.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch quotes");
 
       const data = await response.json();
