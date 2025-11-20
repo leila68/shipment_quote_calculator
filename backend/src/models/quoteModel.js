@@ -49,27 +49,21 @@ export const quoteModel = {
     const info = stmt.run(
       quoteData.lane_id,
       quoteData.equipment_type,
-      parseFloat(quoteData.total_weight), // Ensure this is a number
+      parseFloat(quoteData.total_weight),
       quoteData.pickup_date,
-      parseFloat(quoteData.base_rate), // Ensure this is a number
-      parseFloat(quoteData.equipment_multiplier), // Ensure this is a number
-      parseFloat(quoteData.weight_surcharge), // Ensure this is a number
-      parseFloat(quoteData.fuel_surcharge), // Ensure this is a number
-      parseFloat(quoteData.total_quote), // Ensure this is a number
+      parseFloat(quoteData.base_rate),
+      parseFloat(quoteData.equipment_multiplier),
+      parseFloat(quoteData.weight_surcharge),
+      parseFloat(quoteData.fuel_surcharge),
+      parseFloat(quoteData.total_quote),
       quoteData.status || 'created',
-      quoteData.liftgate_service ? 1 : 0, // Convert boolean to integer (SQLite does not support booleans)
-      quoteData.appointment_delivery ? 1 : 0, // Convert boolean to integer
-      quoteData.residential_delivery ? 1 : 0, // Convert boolean to integer
-      parseFloat(quoteData.accessories_total) // Ensure this is a number
+      quoteData.liftgate_service ? 1 : 0,
+      quoteData.appointment_delivery ? 1 : 0,
+      quoteData.residential_delivery ? 1 : 0,
+      parseFloat(quoteData.accessories_total)
     );
 
-    console.log('💾 Insert result:', info);
-    
-    // Fetch and return the created quote
-    const createdQuote = this.getQuoteById(info.lastInsertRowid);
-    console.log('📦 Retrieved quote:', createdQuote);
-    
-    return createdQuote;
+    return this.getQuoteById(info.lastInsertRowid);
   },
 
   // Update quote status
@@ -86,7 +80,7 @@ export const quoteModel = {
     `);
 
     const info = stmt.run(status, id);
-    
+
     if (info.changes === 0) {
       throw new Error('Quote not found');
     }
@@ -105,6 +99,16 @@ export const quoteModel = {
       WHERE 1=1
     `;
     const params = [];
+
+    if (filters.originCity) {
+      query += ' AND l.origin_city LIKE ?';
+      params.push(`%${filters.originCity}%`);
+    }
+
+    if (filters.destinationCity) {
+      query += ' AND l.destination_city LIKE ?';
+      params.push(`%${filters.destinationCity}%`);
+    }
 
     if (filters.equipmentType) {
       query += ' AND q.equipment_type = ?';
@@ -134,26 +138,41 @@ export const quoteModel = {
 
   // Get quote count for pagination
   getQuoteCount(filters = {}) {
-    let query = 'SELECT COUNT(*) as count FROM quotes WHERE 1=1';
+    let query = `
+      SELECT COUNT(*) as count
+      FROM quotes q
+      LEFT JOIN lanes l ON q.lane_id = l.id
+      WHERE 1=1
+    `;
     const params = [];
 
+    if (filters.originCity) {
+      query += ' AND l.origin_city LIKE ?';
+      params.push(`%${filters.originCity}%`);
+    }
+
+    if (filters.destinationCity) {
+      query += ' AND l.destination_city LIKE ?';
+      params.push(`%${filters.destinationCity}%`);
+    }
+
     if (filters.equipmentType) {
-      query += ' AND equipment_type = ?';
+      query += ' AND q.equipment_type = ?';
       params.push(filters.equipmentType);
     }
 
     if (filters.status) {
-      query += ' AND status = ?';
+      query += ' AND q.status = ?';
       params.push(filters.status);
     }
 
     if (filters.startDate) {
-      query += ' AND pickup_date >= ?';
+      query += ' AND q.pickup_date >= ?';
       params.push(filters.startDate);
     }
 
     if (filters.endDate) {
-      query += ' AND pickup_date <= ?';
+      query += ' AND q.pickup_date <= ?';
       params.push(filters.endDate);
     }
 
