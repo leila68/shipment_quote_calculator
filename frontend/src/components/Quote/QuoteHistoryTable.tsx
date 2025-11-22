@@ -162,16 +162,18 @@ const QuoteHistoryTable = () => {
     };
     return <Badge variant={variants[status] || "default"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
   };
+  
 
   const formatDate = (dateString: string) => {
-    const [year, month, day] = dateString.split("-");
-    return new Date(Number(year), Number(month) - 1, Number(day))
-      .toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
-  };  
+    if (!dateString) return ""; // Avoid Invalid Date
+  
+    return new Date(dateString).toLocaleString("en-US", {
+      timeZone: "America/Toronto", // EST/EDT automatically
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  };
 
   return (
     <Card>
