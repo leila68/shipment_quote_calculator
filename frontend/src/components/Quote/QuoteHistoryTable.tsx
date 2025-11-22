@@ -69,7 +69,8 @@ const QuoteHistoryTable = () => {
       if (filters.origin) queryParams.append('originCity', filters.origin);
       if (filters.destination) queryParams.append('destinationCity', filters.destination);
       if (filters.equipment) queryParams.append('equipmentType', filters.equipment);
-      if (filters.date) queryParams.append('date', filters.date); 
+      if (filters.date) queryParams.append('date', filters.date);
+ 
 
       const response = await fetch(`${API_BASE_URL}/quotes?${queryParams.toString()}`);
       if (!response.ok) throw new Error("Failed to fetch quotes");
@@ -165,14 +166,38 @@ const QuoteHistoryTable = () => {
   
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return ""; // Avoid Invalid Date
+    const [year, month, day] = dateString.split("-");
+    return new Date(Number(year), Number(month) - 1, Number(day))
+      .toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+  };
+
+  const formatCreatedAt = (dateString: string) => {
+    if (!dateString) return "";
   
     return new Date(dateString).toLocaleString("en-US", {
-      timeZone: "America/Toronto", // EST/EDT automatically
+      timeZone: "America/Toronto", // Converts UTC to EST/EDT
       year: "numeric",
       month: "short",
-      day: "numeric"
+      day: "numeric",
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
     });
+  };
+
+  const getUtcDayRange = (localDate: string) => {
+    // Example input: "2024-11-22"
+    const start = new Date(localDate + "T00:00:00");
+    const end = new Date(localDate + "T23:59:59");
+  
+    return {
+      startUtc: start.toISOString(),
+      endUtc: end.toISOString(),
+    };
   };
 
   return (
@@ -293,7 +318,7 @@ const QuoteHistoryTable = () => {
                     <TableCell>{formatDate(quote.pickup_date)}</TableCell>
                     <TableCell>${quote.total_quote.toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                    <TableCell>{formatDate(quote.created_at)}</TableCell>
+                    <TableCell>{formatCreatedAt(quote.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm">
                         <Eye className="w-4 h-4" />
