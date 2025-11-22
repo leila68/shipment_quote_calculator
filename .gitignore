@@ -20,3 +20,5 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.DS_Store
+frontend/.DS_Store
