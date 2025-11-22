@@ -53,7 +53,7 @@ const QuoteHistoryTable = () => {
   const handleEquipmentChange = (value: string) => {
     setFilters(prev => ({
       ...prev,
-      equipment: value
+      equipment: value === "all" ? "" : value
     }));
   };
 
@@ -124,6 +124,11 @@ const QuoteHistoryTable = () => {
     fetchLanes();
   }, []);
 
+  useEffect(() => {
+    setPage(1);
+    fetchQuotes();
+  }, [filters]);
+
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -182,12 +187,13 @@ const QuoteHistoryTable = () => {
             <Label htmlFor="origin-filter">Origin City</Label>
             <Select 
               value={filters.origin} 
-              onValueChange={(value) => handleFilterChange("origin", value)}
+              onValueChange={(value) => handleFilterChange("origin", value === "all" ? "" : value)}
             >
               <SelectTrigger id="origin-filter">
                 <SelectValue placeholder="Select origin city" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Origin Cities</SelectItem>
                 {getUniqueOriginCities().map((city) => (
                   <SelectItem key={city} value={city}>
                     {city}
@@ -200,12 +206,13 @@ const QuoteHistoryTable = () => {
             <Label htmlFor="destination-filter">Destination City</Label>
             <Select 
               value={filters.destination} 
-              onValueChange={(value) => handleFilterChange("destination", value)}
+              onValueChange={(value) => handleFilterChange("destination", value === "all" ? "" : value)}
             >
               <SelectTrigger id="destination-filter">
                 <SelectValue placeholder="Select destination city" />
               </SelectTrigger>
               <SelectContent>
+              <SelectItem value="all">All Destination Cities</SelectItem>
                 {getUniqueDestinationCities().map((city) => (
                   <SelectItem key={city} value={city}>
                     {city}
@@ -221,6 +228,7 @@ const QuoteHistoryTable = () => {
                 <SelectValue placeholder="Select equipment..." />
               </SelectTrigger>
               <SelectContent>
+               <SelectItem value="all">All Equipment</SelectItem>
                 <SelectItem value="dry_van">Dry Van</SelectItem>
                 <SelectItem value="flatbed">Flatbed</SelectItem>
                 <SelectItem value="reefer">Reefer</SelectItem>
@@ -232,7 +240,7 @@ const QuoteHistoryTable = () => {
             <Input type="date" value={filters.date} onChange={(e) => handleFilterChange("date", e.target.value)} />
           </div>
 
-          <Button onClick={applyFilters}>Apply Filters</Button>
+          {/* <Button onClick={applyFilters}>Apply Filters</Button> */}
         
           <Button
             variant="outline"
