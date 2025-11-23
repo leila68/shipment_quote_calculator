@@ -273,5 +273,26 @@ export const quoteController = {
       console.error('Error fetching lanes:', error);
       res.status(500).json({ error: 'Failed to fetch lanes' });
     }
+  },
+
+  async searchOriginCities(req, res) {
+    try {
+      const query = (req.query.query || "").toLowerCase();
+  
+      // Query database for matching origin cities
+      const results = quoteModel.searchOriginCities(query); 
+  
+      res.json({
+        success: true,
+        cities: results,
+      });
+    } catch (error) {
+      console.error("Error searching origin cities:", error);
+      res.status(500).json({ error: "Failed to fetch origin cities" });
+    }
   }
+
+
 };
+
+
