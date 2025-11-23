@@ -54,6 +54,7 @@ const QuoteForm = ({ onCalculate }: QuoteFormProps) => {
   const [lanes, setLanes] = useState<Lane[]>([]);
   const [loading, setLoading] = useState(true);
   const [calculating, setCalculating] = useState(false);
+  const [originSuggestions, setOriginSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     fetchLanes();
@@ -157,6 +158,25 @@ const QuoteForm = ({ onCalculate }: QuoteFormProps) => {
     }));
   };
 
+  const handleOriginChange = async (value: string) => {
+    setFormData((prev) => ({ ...prev, originCity: value, destinationCity: "" }));
+  
+    if (value.length >= 1) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/quotes/lanes/search?query=${value.toLowerCase()}`);
+        const data = await res.json();
+        if (data.success) {
+          // Map to just the city names
+          setOriginSuggestions(data.cities.map((c: any) => c.origin_city));
+        }
+      } catch (err) {
+        console.error("Failed to fetch origin suggestions", err);
+      }
+    } else {
+      setOriginSuggestions([]);
+    }
+  };
+
   const originCities = getUniqueCities("origin");
   const destinationCities = getAvailableDestinations();
 
@@ -176,25 +196,47 @@ const QuoteForm = ({ onCalculate }: QuoteFormProps) => {
         ) : (
           <form onSubmit={handleCalculate} className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="originCity">Origin City</Label>
-                <Select
-                  value={formData.originCity}
-                  onValueChange={(value) => handleInputChange("originCity", value)}
-                  required
-                >
-                  <SelectTrigger id="originCity">
-                    <SelectValue placeholder="Select origin city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {originCities.map((city) => (
-                      <SelectItem key={city.city} value={city.city}>
-                        {city.city}, {city.province}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* ORIGIN CITY (AUTOCOMPLETE) */}
+            {/* ORIGIN CITY - Styled like Select component */}
+<div className="space-y-2">
+  <Label htmlFor="originCity">Origin City</Label>
+
+  <div className="relative">
+    <Input
+      id="originCity"
+      type="text"
+      placeholder="Start typing origin city..."
+      value={formData.originCity}
+      onChange={(e) => handleOriginChange(e.target.value)}
+      autoComplete="off"
+      required
+    />
+
+    {originSuggestions.length > 0 && (
+      <div className="absolute left-0 right-0 mt-2 z-50 max-h-[300px] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95">
+        <div className="max-h-[300px] overflow-auto p-1">
+          {originSuggestions.map((city) => (
+            <div
+              key={city}
+              className="relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+              onClick={() => {
+                setFormData(prev => ({
+                  ...prev,
+                  originCity: city,
+                  destinationCity: ""
+                }));
+                setOriginSuggestions([]);
+              }}
+            >
+              {city}
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
 
               <div className="space-y-2">
                 <Label htmlFor="destinationCity">Destination City</Label>
