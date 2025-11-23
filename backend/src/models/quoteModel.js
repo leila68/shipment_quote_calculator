@@ -167,5 +167,16 @@ export const quoteModel = {
     }
 
     return db.prepare(query).get(...params).count;
+  },
+
+  // Search origin cities by query (for autocomplete)
+  searchOriginCities(query) {
+    return db.prepare(`
+      SELECT DISTINCT origin_city
+      FROM lanes
+      WHERE LOWER(origin_city) LIKE LOWER(?)
+      ORDER BY origin_city
+      LIMIT 5
+    `).all(`${query}%`); 
   }
 };
