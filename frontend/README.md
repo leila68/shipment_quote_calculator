@@ -1,25 +1,27 @@
 # FreightQuote Pro - Shipment Quote Calculator
 
-A professional, modern shipment quote calculator application built with React, TypeScript, and Tailwind CSS. This frontend application provides an intuitive interface for calculating freight shipping quotes with support for multiple equipment types and real-time quote history tracking.
+A professional, modern shipment quote calculator application built with React, TypeScript, and Tailwind CSS. This frontend application provides an intuitive interface for calculating freight shipping quotes with full backend integration, real-time data fetching, and comprehensive quote management.
 
 ## Features
 
 ### Pages
 - **Dashboard**: Overview of shipping activity with quick stats and navigation
-- **New Quote**: Interactive form to request shipment quotes with real-time calculation
-- **Quote History**: Comprehensive table view with filtering and search capabilities
+- **New Quote**: Interactive form to request shipment quotes with real-time calculation and API integration
+- **Quote History**: Comprehensive table view with filtering, search, and pagination capabilities
 
 ### Components
-- **QuoteForm**: Multi-field form with validation for origin, destination, equipment type, weight, and pickup date
-- **QuoteResult**: Detailed breakdown display showing base rate, equipment multiplier, weight factor, and total cost
-- **QuoteHistoryTable**: Filterable table with search by lane/ID and filters for equipment type and status
-- **Header**: Responsive navigation with active route highlighting
+- **QuoteForm**: Multi-field form with validation for origin, destination, equipment type, weight, pickup date, and accessorial services
+- **QuoteResult**: Detailed breakdown display showing base rate, equipment multiplier, weight surcharge, fuel surcharge, and total cost
+- **QuoteHistoryTable**: Filterable table with search and backend-powered data fetching
+- **AppSidebar**: Modern collapsible sidebar navigation using shadcn/ui
+- **Header**: Responsive header with breadcrumb navigation
 
 ### Design System
 - Professional logistics-focused color scheme with deep blue primary and amber accents
 - Fully responsive layout optimized for desktop and mobile devices
 - Semantic color tokens for consistent theming
 - Smooth transitions and modern UI components using shadcn/ui
+- Dark mode support via next-themes
 
 ## Tech Stack
 
@@ -28,144 +30,140 @@ A professional, modern shipment quote calculator application built with React, T
 - **Tailwind CSS** - Utility-first styling
 - **shadcn/ui** - High-quality component library
 - **React Router** - Client-side routing
+- **TanStack Query (React Query)** - Server state management and data fetching
+- **React Hook Form** - Form state management
+- **Zod** - Schema validation
 - **Lucide React** - Beautiful icon system
 - **Vite** - Fast build tool and dev server
+- **date-fns** - Date manipulation utilities
+- **Recharts** - Data visualization
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js (v18 or higher)
 - npm or yarn
+- Backend server running (see backend README for setup)
 
 ### Installation
 
 1. Clone the repository:
-```bash
+\`\`\`bash
 git clone <repository-url>
-cd shipment-quote-calculator
-```
+cd shipment-quote-calculator/frontend
+\`\`\`
 
 2. Install dependencies:
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
-3. Start the development server:
-```bash
+3. Configure environment variables (optional):
+Create a \`.env\` file for custom API configuration:
+\`\`\`env
+VITE_API_URL=http://localhost:5000/api
+\`\`\`
+
+4. Start the development server:
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
-The app will be available at `http://localhost:8080`
+The app will be available at \`http://localhost:8080\`
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint
+- \`npm run dev\` - Start development server with HMR
+- \`npm run build\` - Build for production
+- \`npm run build:dev\` - Build in development mode
+- \`npm run preview\` - Preview production build locally
+- \`npm run lint\` - Run ESLint
 
 ## Project Structure
 
-```
+\`\`\`
 src/
 ├── components/
 │   ├── Layout/
-│   │   └── Header.tsx          # Main navigation header
+│   │   ├── AppSidebar.tsx       # Collapsible sidebar navigation
+│   │   └── Header.tsx           # Header with breadcrumbs
 │   ├── Quote/
-│   │   ├── QuoteForm.tsx       # Quote request form
-│   │   ├── QuoteResult.tsx     # Quote breakdown display
+│   │   ├── QuoteForm.tsx        # Quote request form with validation
+│   │   ├── QuoteResult.tsx      # Quote breakdown display
 │   │   └── QuoteHistoryTable.tsx # Historical quotes table
-│   └── ui/                     # Reusable shadcn components
+│   ├── NavLink.tsx              # Custom navigation link component
+│   └── ui/                      # Reusable shadcn components (50+ components)
+│       ├── button.tsx
+│       ├── card.tsx
+│       ├── form.tsx
+│       ├── sidebar.tsx
+│       └── ... (and many more)
 ├── pages/
-│   ├── Dashboard.tsx           # Dashboard/home page
-│   ├── QuoteFormPage.tsx       # New quote page
-│   ├── QuoteHistoryPage.tsx    # Quote history page
-│   └── NotFound.tsx            # 404 page
-├── hooks/                      # Custom React hooks
+│   ├── Dashboard.tsx            # Dashboard/home page
+│   ├── QuoteFormPage.tsx        # New quote page
+│   ├── QuoteHistoryPage.tsx     # Quote history page
+│   └── NotFound.tsx             # 404 page
+├── hooks/
+│   ├── use-mobile.tsx           # Mobile detection hook
+│   └── use-toast.ts             # Toast notification hook
 ├── lib/
-│   └── utils.ts                # Utility functions
-├── App.tsx                     # Main app component with routing
-├── main.tsx                    # Application entry point
-└── index.css                   # Global styles and design tokens
-```
+│   ├── api.ts                   # API client with TypeScript interfaces
+│   └── utils.ts                 # Utility functions
+├── config/
+│   └── api.ts                   # API base URL configuration
+├── App.tsx                      # Main app with routing and providers
+├── main.tsx                     # Application entry point
+└── index.css                    # Global styles and design tokens
+\`\`\`
 
-## Backend Integration Points
+## Backend Integration
 
-This is a **frontend scaffold** ready for backend integration. The following areas require API implementation:
+This application is **fully integrated** with a PostgreSQL-backed API. Key endpoints:
 
-### 1. Quote Calculation (QuoteFormPage.tsx)
-Replace the mock calculation logic with actual API call:
-```typescript
-// TODO: Replace mock calculation with API call
-// POST /api/quotes/calculate
-// Body: { originCity, destinationCity, equipmentType, totalWeight, pickupDate }
-// Response: { baseRate, equipmentMultiplier, weightFactor, total }
-```
+### API Endpoints
 
-### 2. Quote History (QuoteHistoryTable.tsx)
-Implement API call to fetch historical quotes:
-```typescript
-// TODO: Fetch quotes from backend
-// GET /api/quotes?search=&equipmentType=&status=
-// Response: Array<Quote>
-```
+**Create Quote**: \`POST /api/quotes\`
+**Get Quotes**: \`GET /api/quotes\` (with filters)
+**Get Lanes**: \`GET /api/quotes/meta/lanes\`
+**Search Cities**: \`GET /api/quotes/meta/origin-cities\`
 
-### 3. Dashboard Statistics (Dashboard.tsx)
-Replace mock stats with real data:
-```typescript
-// TODO: Fetch dashboard stats
-// GET /api/dashboard/stats
-// Response: { totalQuotes, activeShipments, totalSpent }
-```
+See \`src/lib/api.ts\` for full API client implementation.
 
-## Design System
+### Environment Configuration
 
-The application uses a comprehensive design system defined in `src/index.css` and `tailwind.config.ts`:
+**Development**: Proxies \`/api\` to \`http://localhost:5000\`
+**Production**: Uses \`VITE_API_URL\` environment variable
 
-### Color Palette
-- **Primary**: Deep blue (#0B63E5) - Trust, logistics
-- **Accent**: Amber (#F59E0B) - Energy, action
-- **Success**: Green - Completed actions
-- **Warning**: Amber - Alerts
-- **Muted**: Neutral grays - Secondary content
+## PostgreSQL Backend
 
-### Component Variants
-All components use semantic tokens from the design system for consistent theming across light and dark modes.
+This frontend works with a PostgreSQL backend featuring:
+- Connection pooling
+- ENUM types for status
+- Precise decimal handling
+- Timezone-aware timestamps
+- Optimized indexes
 
-## Customization
+Setup guide: [Backend PostgreSQL Setup](../backend/POSTGRESQL_SETUP.md)
 
-### Adding New Equipment Types
-Edit the select options in `QuoteForm.tsx`:
-```typescript
-<SelectItem value="new-type">New Equipment Type</SelectItem>
-```
+## Development Workflow
 
-### Modifying Quote Calculations
-Update the calculation logic in `QuoteFormPage.tsx` or connect to your backend API endpoint.
+1. Start backend: \`cd backend && npm run dev\`
+2. Start frontend: \`cd frontend && npm run dev\`
+3. Access at \`http://localhost:8080\`
 
-### Styling Changes
-All design tokens are centralized in `src/index.css`. Modify the CSS variables to update the entire theme.
+## Production Deployment
 
-## Future Enhancements
-
-Potential features to add:
-- User authentication and account management
-- Save quotes for later reference
-- Export quotes to PDF
-- Email quote summaries
-- Real-time shipment tracking
-- Multi-stop route calculation
-- Integration with carrier APIs for live rates
-
-## Contributing
-
-This is a scaffold project. When integrating with your backend:
-1. Replace all TODO comments with actual API implementations
-2. Add proper error handling for API calls
-3. Implement authentication if required
-4. Add loading states for async operations
-5. Consider adding form validation libraries like Zod
+Build: \`npm run build\`
+Set \`VITE_API_URL\` to your production API endpoint
+Deploy to Vercel, Netlify, Render, or AWS
 
 ## License
 
-MIT License - feel free to use this scaffold for your projects.
+MIT License
+
+## Documentation
+
+- [Backend Setup](../backend/POSTGRESQL_SETUP.md)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [TanStack Query](https://tanstack.com/query/latest)
+- [Tailwind CSS](https://tailwindcss.com/)
