@@ -8,9 +8,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Initialize database BEFORE importing routes
-initializeDatabase();
-
 // Middleware - CORS Configuration
 app.use(cors({
   origin: [
@@ -29,8 +26,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
 
-// Dynamically import routes after database initialization
+// Start server after database initialization
 const startServer = async () => {
+  // Initialize database BEFORE importing routes
+  await initializeDatabase();
+
   const { default: quoteRoutes } = await import('./routes/quoteRoutes.js');
   app.use('/api/quotes', quoteRoutes);
 
