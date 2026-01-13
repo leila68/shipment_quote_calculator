@@ -90,6 +90,8 @@ const QuoteForm = ({ onCalculate }: QuoteFormProps) => {
     return uniqueCities.sort((a, b) => a.city.localeCompare(b.city));
   };
 
+
+  // returns lanes that match the selected origin.
   const getAvailableDestinations = () => {
     if (!formData.originCity) {
       return getUniqueCities("destination");
