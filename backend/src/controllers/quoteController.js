@@ -20,23 +20,23 @@ export const quoteController = {
       }
 
       console.log('🔍 Looking for lane:', originCity, '->', destinationCity);
-      
+
       // Get lane
-      const lane = quoteModel.getLaneByRoute(originCity, destinationCity);
+      const lane = await quoteModel.getLaneByRoute(originCity, destinationCity);
       console.log('📍 Lane found:', lane);
-      
+
       if (!lane) {
         console.log('❌ Lane not found');
-        return res.status(404).json({ 
+        return res.status(404).json({
           error: 'Lane not found',
           message: `No route found from ${originCity} to ${destinationCity}`
         });
       }
 
       console.log('🚛 Looking for equipment type:', equipmentType);
-      
+
       // Get equipment multiplier
-      const equipment = quoteModel.getEquipmentMultiplier(equipmentType);
+      const equipment = await quoteModel.getEquipmentMultiplier(equipmentType);
       console.log('🔧 Equipment found:', equipment);
       
       if (!equipment) {
@@ -94,23 +94,23 @@ export const quoteController = {
       }
 
       console.log('🔍 Looking for lane:', originCity, '->', destinationCity);
-      
+
       // Get lane
-      const lane = quoteModel.getLaneByRoute(originCity, destinationCity);
+      const lane = await quoteModel.getLaneByRoute(originCity, destinationCity);
       console.log('📍 Lane found:', lane);
-      
+
       if (!lane) {
         console.log('❌ Lane not found');
-        return res.status(404).json({ 
+        return res.status(404).json({
           error: 'Lane not found',
           message: `No route found from ${originCity} to ${destinationCity}`
         });
       }
 
       console.log('🚛 Looking for equipment type:', equipmentType);
-      
+
       // Get equipment multiplier
-      const equipment = quoteModel.getEquipmentMultiplier(equipmentType);
+      const equipment = await quoteModel.getEquipmentMultiplier(equipmentType);
       console.log('🔧 Equipment found:', equipment);
       
       if (!equipment) {
@@ -152,7 +152,7 @@ export const quoteController = {
       
       console.log('💾 Saving quote:', quoteData);
 
-      const quote = quoteModel.createQuote(quoteData);
+      const quote = await quoteModel.createQuote(quoteData);
       console.log('✅ Quote created:', quote);
 
       res.json({
@@ -190,8 +190,8 @@ export const quoteController = {
     offset: (parseInt(page) - 1) * parseInt(limit)
   };
 
-      const quotes = quoteModel.getAllQuotes(filters);
-      const total = quoteModel.getQuoteCount(filters);
+      const quotes = await quoteModel.getAllQuotes(filters);
+      const total = await quoteModel.getQuoteCount(filters);
 
       res.json({
         success: true,
@@ -222,7 +222,7 @@ export const quoteController = {
         });
       }
 
-      const quote = quoteModel.updateQuoteStatus(id, status);
+      const quote = await quoteModel.updateQuoteStatus(id, status);
 
       res.json({
         success: true,
@@ -245,7 +245,7 @@ export const quoteController = {
   async getQuoteById(req, res) {
     try {
       const { id } = req.params;
-      const quote = quoteModel.getQuoteById(id);
+      const quote = await quoteModel.getQuoteById(id);
 
       if (!quote) {
         return res.status(404).json({ error: 'Quote not found' });
@@ -264,7 +264,7 @@ export const quoteController = {
   // Get available lanes
   async getLanes(req, res) {
     try {
-      const lanes = quoteModel.getAllLanes();
+      const lanes = await quoteModel.getAllLanes();
       res.json({
         success: true,
         lanes
@@ -278,9 +278,9 @@ export const quoteController = {
   async searchOriginCities(req, res) {
     try {
       const query = (req.query.query || "").toLowerCase();
-  
+
       // Query database for matching origin cities
-      const results = quoteModel.searchOriginCities(query); 
+      const results = await quoteModel.searchOriginCities(query); 
   
       res.json({
         success: true,
