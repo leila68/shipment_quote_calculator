@@ -1,101 +1,140 @@
-import Database from 'better-sqlite3';
+import pg from 'pg';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import dotenv from 'dotenv';
 
+dotenv.config();
+
+const { Pool } = pg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, '../../data/quotes.db');
 
-let db;
+let pool;
 
-export const initializeDatabase = () => {
-  if (!db) {
+/**
+ * PostgreSQL connection configuration
+ */
+const dbConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME || 'shipment_quotes',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+
+  // Connection pool settings
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
+  connectionTimeoutMillis: 2000, // How long to wait for a connection
+};
+
+/**
+ * Initialize PostgreSQL connection pool and create schema
+ */
+export const initializeDatabase = async () => {
+  if (!pool) {
     try {
-      // Ensure data directory exists
-      const dataDir = path.dirname(dbPath);
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+      // Create connection pool
+      pool = new Pool(dbConfig);
+
+      // Test connection
+      const client = await pool.connect();
+      console.log('✅ Connected to PostgreSQL database');
+
+      // Run migrations
+      const migrationPath = path.join(__dirname, '../migrations/001_initial_schema.sql');
+
+      if (fs.existsSync(migrationPath)) {
+        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+
+        // Execute migration
+        await client.query(migrationSQL);
+        console.log('✅ Database schema initialized');
+      } else {
+        console.warn('⚠️  Migration file not found, skipping schema creation');
       }
 
-      db = new Database(dbPath, { 
-        verbose: console.log,
-        timeout: 5000,
-        fileMustExist: false
+      client.release();
+
+      // Handle pool errors
+      pool.on('error', (err) => {
+        console.error('❌ Unexpected database error:', err);
+        process.exit(-1);
       });
-      
-      // Enable WAL mode for better concurrency
-      db.pragma('journal_mode = WAL');
-      db.pragma('busy_timeout = 5000');
-      
-      // Create tables
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS lanes (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          origin_city TEXT NOT NULL,
-          origin_province TEXT NOT NULL,
-          origin_postal TEXT NOT NULL,
-          destination_city TEXT NOT NULL,
-          destination_province TEXT NOT NULL,
-          destination_postal TEXT NOT NULL,
-          base_rate REAL NOT NULL,
-          distance_km REAL NOT NULL,
-          transit_days INTEGER NOT NULL
-        );
 
-        CREATE TABLE IF NOT EXISTS equipment_types (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          equipment_type TEXT UNIQUE NOT NULL,
-          multiplier REAL NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS quotes (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          lane_id INTEGER,
-          equipment_type TEXT NOT NULL,
-          total_weight REAL NOT NULL,
-          pickup_date TEXT NOT NULL,
-          base_rate REAL NOT NULL,
-          equipment_multiplier REAL NOT NULL,
-          weight_surcharge REAL NOT NULL,
-          fuel_surcharge REAL,
-          total_quote REAL NOT NULL,
-          status TEXT DEFAULT 'created' CHECK(status IN ('created', 'sent', 'accepted')),
-          liftgate_service BOOLEAN DEFAULT FALSE, -- New field
-          appointment_delivery BOOLEAN DEFAULT FALSE, -- New field
-          residential_delivery BOOLEAN DEFAULT FALSE, -- New field
-          accessories_total DECIMAL(10,2), -- New field
-          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (lane_id) REFERENCES lanes(id)
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_quotes_created_at ON quotes(created_at DESC);
-        CREATE INDEX IF NOT EXISTS idx_quotes_status ON quotes(status);
-      `);
-
-      console.log('✅ Database initialized');
     } catch (error) {
       console.error('❌ Failed to initialize database:', error.message);
-      console.error('💡 Make sure no other process is accessing the database file.');
-      console.error('💡 Try deleting these files if they exist:');
-      console.error(`   - ${dbPath}-shm`);
-      console.error(`   - ${dbPath}-wal`);
+      console.error('💡 Make sure PostgreSQL is running and credentials are correct');
+      console.error('💡 Database:', dbConfig.database);
+      console.error('💡 Host:', dbConfig.host);
+      console.error('💡 Port:', dbConfig.port);
+      console.error('💡 User:', dbConfig.user);
       throw error;
     }
   }
-  return db;
+  return pool;
 };
 
+/**
+ * Get database pool instance
+ * @returns {Pool} PostgreSQL connection pool
+ */
 export const getDatabase = () => {
-  if (!db) {
+  if (!pool) {
     throw new Error('Database not initialized. Call initializeDatabase() first.');
   }
-  return db;
+  return pool;
 };
 
-export const closeDatabase = () => {
-  if (db) {
-    db.close();
-    db = null;
-    console.log('✅ Database connection closed');
+/**
+ * Execute a query with parameters
+ * @param {string} text - SQL query text
+ * @param {Array} params - Query parameters
+ * @returns {Promise<Object>} Query result
+ */
+export const query = async (text, params) => {
+  const start = Date.now();
+  try {
+    const res = await pool.query(text, params);
+    const duration = Date.now() - start;
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('executed query', { text, duration, rows: res.rowCount });
+    }
+
+    return res;
+  } catch (error) {
+    console.error('Query error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a client from the pool for transactions
+ * @returns {Promise<PoolClient>} Database client
+ */
+export const getClient = async () => {
+  return await pool.connect();
+};
+
+/**
+ * Close database connection pool
+ */
+export const closeDatabase = async () => {
+  if (pool) {
+    await pool.end();
+    pool = null;
+    console.log('✅ Database connection pool closed');
+  }
+};
+
+/**
+ * Check if database connection is healthy
+ */
+export const healthCheck = async () => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    return { healthy: true, timestamp: result.rows[0].now };
+  } catch (error) {
+    return { healthy: false, error: error.message };
   }
 };
